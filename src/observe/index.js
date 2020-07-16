@@ -6,11 +6,34 @@ class Observer {
         this.walk(data);
     }
     walk(data) {
-        
+        // 对象的循环 data= {name: 'samuelcheng'}
+        Object.keys(data).forEach(key => {
+            defineReactive(data, key, data[key]);
+        });
     }
 }
 
+// vue2的性能 递归重写get set  vue3使用proxy优化性能问题
+// 定义响应式的数据变化
+function defineReactive(data, key, value) {
+    // 如果传入的值还是对象的话，递归循环操作
+    observe(value);
+    Object.defineProperty(data, key,{
+        get() {
+            return value;
+        },
+        set(v) {
+            if(!value == v) {
+                // 赋值vm.msg = {b: 200}为对象也需要监控一下
+                observe(v);
+                value = v;
+            }
+        }
+    });
+}
+
 export function observe(data) {
+
     // 对象就是defineProperty 来实现响应式原理
     // 如果数据不是对象或者为null 那就不用监控了
     if(!isObject(data)) {

@@ -26,14 +26,65 @@
     }
   }
 
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
   // 工具方法
   function isObject(data) {
     return _typeof(data) === 'object' && data !== null;
   }
 
-  var Observer = function Observer(data) {
-    _classCallCheck(this, Observer);
-  };
+  var Observer = /*#__PURE__*/function () {
+    function Observer(data) {
+      _classCallCheck(this, Observer);
+
+      this.walk(data);
+    }
+
+    _createClass(Observer, [{
+      key: "walk",
+      value: function walk(data) {
+        // 对象的循环 data= {name: 'samuelcheng'}
+        Object.keys(data).forEach(function (key) {
+          defineReactive(data, key, data[key]);
+        });
+      }
+    }]);
+
+    return Observer;
+  }(); // vue2的性能 递归重写get set  vue3使用proxy优化性能问题
+  // 定义响应式的数据变化
+
+
+  function defineReactive(data, key, value) {
+    // 如果传入的值还是对象的话，递归循环操作
+    observe(value);
+    Object.defineProperty(data, key, {
+      get: function get() {
+        return value;
+      },
+      set: function set(v) {
+        if (!value == v) {
+          // 赋值vm.msg = {b: 200}为对象也需要监控一下
+          observe(v);
+          value = v;
+        }
+      }
+    });
+  }
 
   function observe(data) {
     // 对象就是defineProperty 来实现响应式原理
@@ -64,8 +115,9 @@
     // 数据响应式原理
     // console.log('---initData1---', vm.$options.data);
     var data = vm.$options.data; // 用户传入的数据
+    // vm._data代表检测后的数据
 
-    data = typeof data === 'function' ? data.call(vm) : data; // console.log('---initData2---', data);
+    data = vm._data = typeof data === 'function' ? data.call(vm) : data; // console.log('---initData2---', data);
     // 观测数据
 
     observe(data);

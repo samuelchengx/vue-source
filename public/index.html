@@ -17,10 +17,16 @@
         // 对对象的所有属性使用defineProperty进行重新定义 get set
         data() {
             return {
-                name: 'samuelcheng'
+                name: 'samuelcheng',
+                age: 29,
+                a: {
+                    a: 100
+                }
             }
         }
     });
+
+    console.log('vm', vm);
 </script>
 </body>
 </html>

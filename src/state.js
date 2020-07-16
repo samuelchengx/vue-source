@@ -26,7 +26,8 @@ function initData(vm) {
     // 数据响应式原理
     // console.log('---initData1---', vm.$options.data);
     let data = vm.$options.data; // 用户传入的数据
-    data = typeof data === 'function' ? data.call(vm) : data;
+    // vm._data代表检测后的数据
+    data = vm._data = typeof data === 'function' ? data.call(vm) : data;
     // console.log('---initData2---', data);
     // 观测数据
     observe(data);
