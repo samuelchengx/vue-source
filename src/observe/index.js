@@ -1,9 +1,23 @@
 import { isObject } from './../util';
-
+import { ArrayMethods } from './array'
 // es6类实现
 class Observer {
     constructor(data) {
-        this.walk(data);
+        // 对数组索引进行拦截 性能差而且直接更改索引的方式(a[10] = 100)并不多
+        if(Array.isArray(data)){
+            // vue对数组进行处理 数组使用重写数组的方式 函数劫持
+            // 改变数组的方法
+            data.__proto__ = ArrayMethods; // 通过原型链向上查找的方式
+            // arr = [{a: 1}] arr[0].a  = 100;
+            this.observeArray(data);
+        } else {
+            this.walk(data);
+        }
+    }
+    observeArray(data){
+        for (let i = 0; i < data.length; i++) {
+            observe(data[i]);
+        }
     }
     walk(data) {
         // 对象的循环 data= {name: 'samuelcheng'}
@@ -33,14 +47,12 @@ function defineReactive(data, key, value) {
 }
 
 export function observe(data) {
-
     // 对象就是defineProperty 来实现响应式原理
     // 如果数据不是对象或者为null 那就不用监控了
     if(!isObject(data)) {
         return;
     }
     console.log('---observe---', data);
-
     // 对数据进行defineProperty
     return new Observer(data); // 当前数据是否被观测过
 }

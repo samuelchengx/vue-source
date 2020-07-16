@@ -47,14 +47,48 @@
     return _typeof(data) === 'object' && data !== null;
   }
 
+  var oldArrayMethods = Array.prototype;
+  var ArrayMethods = Object.create(oldArrayMethods); // 改变原数组的七个方法
+
+  var methods = ['push', 'pop', 'shift', 'unshift', 'sort', 'reverse', 'splice'];
+  methods.forEach(function (methods) {
+    ArrayMethods[methods] = function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      //函数劫持 AOP
+      // 当用户调用数组的时候，会先执行改造的逻辑，再执行数组默认的逻辑
+      oldArrayMethods[methods].apply(this, args); // push unshift splice 都会新增属性 【新增属性为对象】
+      // 内部还对数组引用类型做了一次劫持
+    };
+  });
+
   var Observer = /*#__PURE__*/function () {
     function Observer(data) {
       _classCallCheck(this, Observer);
 
-      this.walk(data);
+      // 对数组索引进行拦截 性能差而且直接更改索引的方式(a[10] = 100)并不多
+      if (Array.isArray(data)) {
+        // vue对数组进行处理 数组使用重写数组的方式 函数劫持
+        // 改变数组的方法
+        data.__proto__ = ArrayMethods; // 通过原型链向上查找的方式
+        // arr = [{a: 1}] arr[0].a  = 100;
+
+        this.observeArray(data);
+      } else {
+        this.walk(data);
+      }
     }
 
     _createClass(Observer, [{
+      key: "observeArray",
+      value: function observeArray(data) {
+        for (var i = 0; i < data.length; i++) {
+          observe(data[i]);
+        }
+      }
+    }, {
       key: "walk",
       value: function walk(data) {
         // 对象的循环 data= {name: 'samuelcheng'}
