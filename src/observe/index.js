@@ -3,7 +3,10 @@ import { isObject } from './../util';
 // es6类实现
 class Observer {
     constructor(data) {
-
+        this.walk(data);
+    }
+    walk(data) {
+        
     }
 }
 
