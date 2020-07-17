@@ -40,9 +40,9 @@
         //     ]
         // }
         // 如何将模版变成render函数 返回的是虚拟节点
-        // template: `
-        //     <div> <span></span> hello {{ age }} {{ msg }}</div>
-        // `,
+        template: `
+            <div> <span></span> hello {{ age }} {{ msg }}</div>
+        `,
         // vue 虚拟dom 跨平台
         // render() {
         //     with (vm._data) {
@@ -54,7 +54,7 @@
      // vm set get
      // vm.msg1 = 'msg';
      //vm._data.arr.splice(1, 0, {P:  0});
-    console.log('vm', vm);
+    // console.log('vm', vm);
     vm._data.arr.splice(1, 0, {P:  0});
 </script>
 </body>

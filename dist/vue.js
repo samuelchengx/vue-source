@@ -192,6 +192,14 @@
    *
    * */
 
+  function compileToFunctions(template) {
+    console.log('template', template); // 实现模版的编译
+    // 模版编译原理
+    // 1、先把代码转换成ast语法树 (1) parse解析 正则
+    // 2、标记静态树 <span>123</span> (2) 树的遍历标记 makeup
+    // 3、通过ast产生的语法树 生成代码 => render (3) codegen
+  }
+
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // vue的内部 $options 就是用户传递的所有参数
@@ -204,14 +212,30 @@
 
       if (vm.$options.el) {
         // 用户传入了el属性
-        vm.$mount(vm.$options.el);
+        vm.$mount(vm.$options.el, vm);
       }
     };
 
     Vue.prototype.$mount = function (el) {
       // 可能是字符串 可能是dom对象
-      el = document.querySelector(el);
-      console.log(el); // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
+      var vm = this;
+      el = document.querySelector(el); // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
+
+      var opts = vm.$options;
+
+      if (!opts.render) {
+        var template = opts.template;
+
+        if (!template && el) {
+          // 使用外部模版
+          template = el.outerHTML;
+        }
+
+        var render = compileToFunctions(template);
+        opts.render = render;
+      } // 默认采用render
+      // opts.render;
+
     };
   }
 
