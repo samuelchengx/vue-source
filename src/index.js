@@ -5,6 +5,8 @@ function Vue(options) {
     this._init(options);
 }
 
+// Vue.prototype._init = function (opt) {}
+
 initMixin(Vue); // 添加原型方法
 // Vue.prototype._init = function (opt) {}
 

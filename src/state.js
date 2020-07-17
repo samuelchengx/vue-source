@@ -32,3 +32,9 @@ function initData(vm) {
     // 观测数据
     observe(data);
 }
+
+/**
+ *
+ *
+ *
+ * */

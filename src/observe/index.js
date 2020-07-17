@@ -1,10 +1,19 @@
 import { isObject } from './../util';
-import { ArrayMethods } from './array'
+import { ArrayMethods } from './array';
+
 // es6类实现
 class Observer {
     constructor(data) {
+        // 数据上可以获取到__ob__属性,保存observe的实例
+        // 递归调用不会遍历不可枚举类型的属性
+        Object.defineProperty(data, '__ob__', {
+            enumerable: false,
+            configurable: false,
+            value: this
+        });
+        // data.__ob__ = this;
         // 对数组索引进行拦截 性能差而且直接更改索引的方式(a[10] = 100)并不多
-        if(Array.isArray(data)){
+        if(Array.isArray(data)) {
             // vue对数组进行处理 数组使用重写数组的方式 函数劫持
             // 改变数组的方法
             data.__proto__ = ArrayMethods; // 通过原型链向上查找的方式
@@ -14,7 +23,7 @@ class Observer {
             this.walk(data);
         }
     }
-    observeArray(data){
+    observeArray(data) {
         for (let i = 0; i < data.length; i++) {
             observe(data[i]);
         }
@@ -52,7 +61,11 @@ export function observe(data) {
     if(!isObject(data)) {
         return;
     }
-    console.log('---observe---', data);
+    // 防止对象被重复观测
+    if(data.__ob__ instanceof Observer) {
+        return;
+    }
+    // console.log('---observe---', data);
     // 对数据进行defineProperty
     return new Observer(data); // 当前数据是否被观测过
 }

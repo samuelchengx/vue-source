@@ -8,6 +8,7 @@
     <title>Document</title>
 </head>
 <body>
+<div id="app"></div>
 <script src="./../dist/vue.js"></script>
 <script>
     // Object.defineProperties()
@@ -15,19 +16,46 @@
         el: '#app',
         // 数据被观测，响应式数据变化
         // 对对象的所有属性使用defineProperty进行重新定义 get set
-        data() {
+        data () {
             return {
                 name: 'samuelcheng',
                 age: 29,
                 a: {
                     a: 100
                 },
-                arr: [1, 2, 3, 4]
+                arr: [1, 2, 3, 4, {T: 10}, {Z: 350}]
             }
-        }
-    });
+        },
+        // js语法也可以用ast语法树来描述
+        // 1、实现一个解析器 可以解析html模版 => ast语法树 可以用树结构描述当前标签内容
+        // 2、虚拟节点是描述dom的，是使用对象来描述html ast语法树描述语法的
 
+        // 将html本身变成js语法
+
+        // {
+        //     tag： 'div',
+        //     attrs: [{name: 'class', value: 'a'}];
+        //     children: [
+        //
+        //     ]
+        // }
+        // 如何将模版变成render函数 返回的是虚拟节点
+        // template: `
+        //     <div> <span></span> hello {{ age }} {{ msg }}</div>
+        // `,
+        // vue 虚拟dom 跨平台
+        // render() {
+        //     with (vm._data) {
+        //         return _c('div', {class: 'a'}, _c('span', null, 123, _v('hello') + _v(age)) + _v(msg)));
+        //     }
+        // }
+    });
+     // vm.data.arr.push(10);
+     // vm set get
+     // vm.msg1 = 'msg';
+     //vm._data.arr.splice(1, 0, {P:  0});
     console.log('vm', vm);
+    vm._data.arr.splice(1, 0, {P:  0});
 </script>
 </body>
 </html>

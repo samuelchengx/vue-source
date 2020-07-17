@@ -51,16 +51,33 @@
   var ArrayMethods = Object.create(oldArrayMethods); // 改变原数组的七个方法
 
   var methods = ['push', 'pop', 'shift', 'unshift', 'sort', 'reverse', 'splice'];
-  methods.forEach(function (methods) {
-    ArrayMethods[methods] = function () {
+  methods.forEach(function (method) {
+    ArrayMethods[method] = function () {
+      //函数劫持 AOP
+      var ob = this.__ob__; // 当用户调用数组的时候，会先执行改造的逻辑，再执行数组默认的逻辑
+
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
 
-      //函数劫持 AOP
-      // 当用户调用数组的时候，会先执行改造的逻辑，再执行数组默认的逻辑
-      oldArrayMethods[methods].apply(this, args); // push unshift splice 都会新增属性 【新增属性为对象】
+      var result = oldArrayMethods[method].apply(this, args);
+      var inserted; // push unshift splice 都会新增属性 【新增属性为对象】
       // 内部还对数组引用类型做了一次劫持
+
+      switch (method) {
+        case 'push':
+        case 'unshift':
+          inserted = args;
+          break;
+
+        case 'splice':
+          // 也是新增属性 可修改，可删，可增
+          inserted = args.slice(2);
+          break;
+      }
+
+      inserted && ob.observeArray(inserted);
+      return result;
     };
   });
 
@@ -68,7 +85,15 @@
     function Observer(data) {
       _classCallCheck(this, Observer);
 
+      // 数据上可以获取到__ob__属性,保存observe的实例
+      // 递归调用不会遍历不可枚举类型的属性
+      Object.defineProperty(data, '__ob__', {
+        enumerable: false,
+        configurable: false,
+        value: this
+      }); // data.__ob__ = this;
       // 对数组索引进行拦截 性能差而且直接更改索引的方式(a[10] = 100)并不多
+
       if (Array.isArray(data)) {
         // vue对数组进行处理 数组使用重写数组的方式 函数劫持
         // 改变数组的方法
@@ -125,9 +150,14 @@
     // 如果数据不是对象或者为null 那就不用监控了
     if (!isObject(data)) {
       return;
-    }
+    } // 防止对象被重复观测
 
-    console.log('---observe---', data); // 对数据进行defineProperty
+
+    if (data.__ob__ instanceof Observer) {
+      return;
+    } // console.log('---observe---', data);
+    // 对数据进行defineProperty
+
 
     return new Observer(data); // 当前数据是否被观测过
   }
@@ -156,6 +186,11 @@
 
     observe(data);
   }
+  /**
+   *
+   *
+   *
+   * */
 
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
@@ -165,6 +200,18 @@
       // options.data props computed watch
 
       initState(vm); // 初始化状态
+      // 需要通过模版进行渲染
+
+      if (vm.$options.el) {
+        // 用户传入了el属性
+        vm.$mount(vm.$options.el);
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      // 可能是字符串 可能是dom对象
+      el = document.querySelector(el);
+      console.log(el); // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
     };
   }
 
@@ -172,7 +219,8 @@
     // 内部初始化操作
     // console.log(options);
     this._init(options);
-  }
+  } // Vue.prototype._init = function (opt) {}
+
 
   initMixin(Vue); // 添加原型方法
 
