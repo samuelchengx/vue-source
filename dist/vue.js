@@ -210,6 +210,71 @@
 
   var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
   function parseHTML(html) {
+    // ast语法树 表示html语法
+    var root; // 树根
+
+    var currentParent;
+    var stack = []; // 用来判断标签是否正常闭合
+    // 利用常见的数据结构解析标签
+    // <div id="app" style="color: red;"><span>hello world {{msg}}</span></div>
+    // {
+    //     tag: 'div',
+    //     type: 1,
+    //     children: [],
+    //     attrs: [{name: 'id', value:  'app'}, {name: 'style', value: 'color: red;'}],
+    //     parent: null
+    // }
+    // vue2.0 只能有一个根节点 必须是html元素
+    // stack = [divAstElement, spanAstElement]
+
+    function createASTElement(tagName, attrs) {
+      return {
+        tag: tagName,
+        attrs: attrs,
+        children: [],
+        parent: null,
+        type: 1 // 1是普通元素 3是文本
+
+      };
+    }
+
+    function start(tagName, attrs) {
+      // 开始标签, 每次解析开始标签都会执行次方法
+      // console.log('tagName, attr', tagName, attrs);
+      var element = createASTElement(tagName, attrs);
+
+      if (!root) {
+        root = element;
+      }
+
+      currentParent = element;
+      stack.push(element);
+      console.log('start', root);
+    }
+
+    function end(tagName) {
+      // 结束标签 确定父子关系
+      console.log('tagName', tagName);
+      var element = stack.pop();
+      var parent = stack[stack.length - 1];
+
+      if (parent) {
+        element.parent = parent;
+        parent.children.push(element);
+      }
+    }
+
+    function chars(text) {
+      // 文本
+      text = text.replace(/\s/g, '');
+
+      if (text) {
+        currentParent.children.push({
+          type: 3,
+          text: text
+        });
+      }
+    } // 根据 html 解析成树结构  </span></div>
 
 
     while (html) {
@@ -218,10 +283,16 @@
       if (textEnd == 0) {
         var startTagMatch = parseStartTag(); // 开始标签
 
+        if (startTagMatch) {
+          // console.log('startTagMatch', startTagMatch);
+          start(startTagMatch.tagName, startTagMatch.attrs); // console.log('开始', startTagMatch);
+        }
+
         var endTagMatch = html.match(endTag); // 结束标签
 
         if (endTagMatch) {
-          advance(endTagMatch[0].length); // console.log('开始', endTagMatch);
+          advance(endTagMatch[0].length);
+          end(endTagMatch[0]); // console.log('开始', endTagMatch);
         }
       } // 如果不是0 说明是文本
 
@@ -229,10 +300,11 @@
       var text = void 0;
       console.log('textEnd', html, textEnd);
 
-      if (textEnd >= 0) {
+      if (textEnd > 0) {
         text = html.substring(0, textEnd); // 是文本就把文本内容进行截取
 
         console.log(text);
+        chars(text);
       }
 
       if (text) {
@@ -272,15 +344,46 @@
         }
       }
     }
+
+    return root;
+  }
+
+  function genProps(attrs) {
+    console.log('attrs', attrs);
+
+    for (var i = 0; i < attrs.length; i++) {
+      var attr = attrs[i];
+      console.log('attr', attr.name);
+    }
+  }
+
+  function generate(ast) {
+    console.log('---generate ast---', ast);
+    var code = "\n        _c(\"".concat(ast.tag, "\", ").concat(ast.attrs.length ? "".concat(genProps(ast.attrs)) : undefined, ")\n    ");
+    return code;
   }
 
   function compileToFunctions(template) {
     // console.log('template', template);
-    parseHTML(template); // 实现模版的编译
+    var ast = parseHTML(template); // 实现模版的编译
     // 模版编译原理
     // 1、先把代码转换成ast语法树 (1) parse解析 正则
     // 2、标记静态树 <span>123</span> (2) 树的遍历标记 makeup
     // 3、通过ast产生的语法树 生成代码 => render (3) codegen
+    // console.log('---ast---', ast);
+    // 代码生成
+    // template => render 函数
+
+    /**
+     * render(){
+     *      with(this._data){
+     *          return _c('div', {id: 'app', style:{color: red}}, _c('span', undefined, _v(hello world + _s(msg))))
+     *      }
+     * }
+     */
+    // 核心思想字符串拼接
+
+    var code = generate(ast);
   }
 
   function initMixin(Vue) {
