@@ -192,8 +192,98 @@
    *
    * */
 
+  // 字母a-zA-Z_ - . 数字小写字母大写字母
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // 标签名
+  // ?:表示匹配不捕获  命名空间的标签<aaa:aaa>
+
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")"); // startTagOpen 可以匹配到开始标签 正则捕获到的内容是 (标签名)
+
+  var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 标签开头的正则 捕获的内容是标签名
+  // endTag 闭合标签 [^>]*表示非>有n个
+
+  var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>")); // 匹配标签结尾的 </div>
+  // 匹配标签属性 <div aaa = "" bbb = '' ccc = 123>
+
+  var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性的
+  // <div > <br/>
+
+  var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
+  function parseHTML(html) {
+    // 根据 html 解析成树结构  <div id="app"><span>hello world {{msg}}</span></div>
+    console.log('---parseHTML1---', html);
+
+    while (html) {
+      var textEnd = html.indexOf('<');
+
+      if (textEnd == 0) {
+        var startTagMatch = parseStartTag(); // console.log('startTagMatch', startTagMatch);
+
+        if (startTagMatch) {
+          console.log('startTagMatch', '开始');
+        }
+
+        var endTagMatch = html.match(endTag); // 结束标签
+
+        if (endTagMatch) {
+          advance(endTagMatch[0].length);
+          console.log('endTagMatch', endTagMatch);
+        }
+
+        break;
+      } // 如果不是0 说明是文本
+
+
+      var text = void 0;
+
+      if (textEnd >= 0) {
+        text = html.substring(0, textEnd); // 是文本就把文本内容进行截取
+
+        console.log('text', text);
+      }
+
+      if (text) {
+        advance(text.length);
+      }
+
+      console.log('---parseHTML2---', html);
+    }
+
+    function advance(n) {
+      html = html.substring(n);
+    }
+
+    function parseStartTag() {
+      // 匹配开始标签
+      var start = html.match(startTagOpen);
+
+      if (start) {
+        var match = {
+          tagName: start[1],
+          attrs: []
+        };
+        advance(start[0].length);
+        var end, attr;
+
+        while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+          advance(attr[0].length);
+          match.attrs.push({
+            name: attr[1],
+            value: attr[3] || attr[4] || attr[5]
+          });
+        }
+
+        if (end) {
+          advance(end[0].length);
+          console.log('---match---', match, html);
+          return match;
+        }
+      }
+    }
+  }
+
   function compileToFunctions(template) {
-    console.log('template', template); // 实现模版的编译
+    // console.log('template', template);
+    parseHTML(template); // 实现模版的编译
     // 模版编译原理
     // 1、先把代码转换成ast语法树 (1) parse解析 正则
     // 2、标记静态树 <span>123</span> (2) 树的遍历标记 makeup
