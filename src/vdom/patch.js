@@ -1,4 +1,3 @@
-
 function updateProperties(vNode) {
     let el = vNode.el;
     let newProps = vNode.data || {};
@@ -17,7 +16,7 @@ function updateProperties(vNode) {
 function createElm(vNode) { // 递归创建
     // console.log(vNode);
     let {tag, children, data, key, text} = vNode;
-    if(typeof tag == 'string'){
+    if(typeof tag == 'string') {
         // 元素 虚拟节点和真实节点做一个映射关系(后面diff时直接使用老元素)
         vNode.el = document.createElement(tag);
         // 更新元素属性
@@ -49,5 +48,4 @@ export function patch(oldVnode, newVnode) {
         // dom diff算法
 
     }
-
 }

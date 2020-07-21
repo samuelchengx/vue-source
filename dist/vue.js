@@ -326,12 +326,20 @@
     function end(tagName) {
       // 结束标签 确定父子关系
       // console.log('tagName', tagName);
+      // <div><span></span> hello world! </div>
+      // let element = stack.pop();
+      // let parent = stack[stack.length -1];
+      // if(parent){
+      //     element.parent = parent;
+      //     parent.children.push(element);
+      // }
+      // fix: 嵌套层级问题 parent => currentParent 改变父亲节点
       var element = stack.pop();
-      var parent = stack[stack.length - 1];
+      currentParent = stack[stack.length - 1];
 
-      if (parent) {
-        element.parent = parent;
-        parent.children.push(element);
+      if (currentParent) {
+        element.parent = currentParent;
+        currentParent.children.push(element);
       }
     }
 
