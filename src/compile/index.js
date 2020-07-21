@@ -19,6 +19,13 @@ export function compileToFunctions (template) {
      *      }
      * }
      */
+
     // 核心思想字符串拼接
-    let code = generate(ast)
+    let code = generate(ast); // 代码生成 => 拼接字符串
+    code = `with(this){ return ${code} }`;
+    let render = new Function(code);  // 相当于把字符串变成了函数
+
+    // 注释节点 自闭合标签 事件绑定 class slot插槽
+    // console.log('render', render);
+    return render;
 }

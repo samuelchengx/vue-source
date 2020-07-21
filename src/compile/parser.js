@@ -46,10 +46,10 @@ export function parseHTML(html) {
         }
         currentParent = element;
         stack.push(element);
-        console.log('start', root);
+        // console.log('start', root);
     }
     function end(tagName) { // 结束标签 确定父子关系
-        console.log('tagName', tagName);
+        // console.log('tagName', tagName);
         let element = stack.pop();
         let parent = stack[stack.length -1];
         if(parent){
@@ -87,10 +87,10 @@ export function parseHTML(html) {
         }
         // 如果不是0 说明是文本
         let text;
-        console.log('textEnd', html, textEnd);
+        // console.log('textEnd', html, textEnd);
         if(textEnd > 0) {
             text = html.substring(0,textEnd); // 是文本就把文本内容进行截取
-            console.log(text);
+            // console.log(text);
             chars(text);
         }
         if(text){

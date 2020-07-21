@@ -1,16 +1,16 @@
 import { initMixin } from './init';
+import { renderMixin } from './render';
+import { lifeCycleMixin } from './lifeCycle';
 function Vue(options) {
     // 内部初始化操作
     // console.log(options);
     this._init(options);
 }
-
 // Vue.prototype._init = function (opt) {}
-
 initMixin(Vue); // 添加原型方法
 // Vue.prototype._init = function (opt) {}
-
+renderMixin(Vue);
+lifeCycleMixin(Vue);
 // 组件初始化
-
 
 export default Vue;

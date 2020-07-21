@@ -40,7 +40,7 @@
         //     ]
         // }
         // 如何将模版变成render函数 返回的是虚拟节点
-        template: `<div id="app" style="color: red;"><span>hello world {{msg}}</span></div>`,
+        template: `<div id="app" style="color: red;"><span>hello world {{name}} ccc</span></div>`,
         // vue 虚拟dom 跨平台
         // render() {
         //     with (vm._data) {
@@ -52,8 +52,8 @@
      // vm set get
      // vm.msg1 = 'msg';
      //vm._data.arr.splice(1, 0, {P:  0});
-    // console.log('vm', vm);
-    vm._data.arr.splice(1, 0, {P:  0});
+    //  console.log('vm--', vm.name);
+    vm.arr.splice(1, 0, {P:  0});
 </script>
 </body>
 </html>
