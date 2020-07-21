@@ -15,6 +15,7 @@ export function mountComponent(vm, el) {
     // vue在渲染过程中 会创建渲染watcher
     // watcher就是一个回调
     // vue是不是MVVM框架
+    callHook(vm, 'beforeMount');
     const updateComponent = () => {
         // 内部调用解析后的render方法 => 虚拟node
         // _render => options.render 方法
@@ -24,4 +25,14 @@ export function mountComponent(vm, el) {
     // 每次数据变化就执行updateComponent 进行更新操作
     new Watcher(vm, updateComponent, ()=>{}, true);
     // vue响应式数据规则 数据变化，视图刷新
+    callHook(vm, 'created');
+}
+
+export function callHook(vm, hook) {
+    let handles = vm.$options[hook];
+    if(handles){
+        for (let i = 0; i < handles.length; i++) {
+            handles[i].call(vm); // 所有的生命周期的this 指向的都是当前的实例
+        }
+    }
 }
