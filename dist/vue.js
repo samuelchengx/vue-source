@@ -113,7 +113,7 @@
         return [child];
       }
     } else {
-      return [parent];
+      return parent;
     }
   }
 
@@ -152,6 +152,7 @@
       // 写代码时忌讳 各种if else
       // 使用策略模式
       if (strategys[key]) {
+        // 这里是merge hook的逻辑
         options[key] = strategys[key](parent[key], child[key]);
       } else if (isObject(parent[key]) && isObject(child[key])) {
         // options[key] = {

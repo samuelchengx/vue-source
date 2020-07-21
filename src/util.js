@@ -11,15 +11,16 @@ const LIFECYCLE_HOOKS = [
     'updated'
 ];
 let strategys = [];
+
 function mergeHook(parent, child) {
-    if(child){
+    if(child) {
         if (parent) {
             return parent.concat(child);
         } else {
             return [child]
         }
     } else {
-        return [parent];
+        return parent;
     }
 }
 
@@ -39,7 +40,6 @@ LIFECYCLE_HOOKS.forEach( hook => {
 //     // 扩展不同属性的策略
 // }
 
-
 export function mergeOptions(parent, child) {
     console.log(parent, child);
     const options = {};
@@ -57,6 +57,7 @@ export function mergeOptions(parent, child) {
         // 写代码时忌讳 各种if else
         // 使用策略模式
         if(strategys[key]) {
+            // 这里是merge hook的逻辑
             options[key] = strategys[key](parent[key], child[key]);
         } else if (isObject(parent[key]) && isObject(child[key])) {
             // options[key] = {
