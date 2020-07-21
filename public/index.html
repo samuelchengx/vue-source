@@ -13,6 +13,37 @@
 </div>
 <script src="./../dist/vue.js"></script>
 <script>
+    // 多个实例，提取公共逻辑
+    // Vue.mixin Vue.extend 静态方法 一般都放在Vue的构造函数上
+
+    Vue.mixin({
+        // 合并策略非常多 data computed watch props
+        // 生命周期的合并策略 面试点
+        a: {
+            a: 1
+        },
+        b: 2,
+        created () {
+            console.log('mixin 1');
+        },
+        beforeCreate() {
+            console.log('before create 1');
+        }
+    });
+
+    Vue.mixin({
+        a: {
+            b: 2
+        },
+        c: 3,
+        created () {
+            console.log('mixin 2');
+        },
+        beforeCreate() {
+            console.log('before create 2');
+        }
+    });
+
     // Object.defineProperties()
     const vm = new Vue({
         el: '#app',
@@ -31,9 +62,7 @@
         // js语法也可以用ast语法树来描述
         // 1、实现一个解析器 可以解析html模版 => ast语法树 可以用树结构描述当前标签内容
         // 2、虚拟节点是描述dom的，是使用对象来描述html ast语法树描述语法的
-
         // 将html本身变成js语法
-
         // {
         //     tag： 'div',
         //     attrs: [{name: 'class', value: 'a'}];
@@ -49,6 +78,9 @@
         //         return _c('div', {class: 'a'}, _c('span', null, 123, _v('hello') + _v(age)) + _v(msg)));
         //     }
         // }
+        created() {
+            console.log('created');
+        }
     });
      // vm.data.arr.push(10);
      // vm set get

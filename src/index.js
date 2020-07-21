@@ -1,6 +1,7 @@
 import { initMixin } from './init';
 import { renderMixin } from './render';
 import { lifeCycleMixin } from './lifeCycle';
+import { initGlobalApi } from './global-api/index'
 function Vue(options) {
     // 内部初始化操作
     // console.log(options);
@@ -12,5 +13,7 @@ initMixin(Vue); // 添加原型方法
 renderMixin(Vue);
 lifeCycleMixin(Vue);
 // 组件初始化
+// initGlobalApi 给构造函数扩展全局方法
+initGlobalApi(Vue);
 
 export default Vue;
