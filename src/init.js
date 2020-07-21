@@ -15,7 +15,7 @@ export function initMixin(Vue) {
     };
     Vue.prototype.$mount = function (el) { // 可能是字符串 可能是dom对象
         const vm = this;
-        el = document.querySelector(el);
+        el = vm.$el = document.querySelector(el);
         // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
         const opts = vm.$options;
         if(!opts.render) {

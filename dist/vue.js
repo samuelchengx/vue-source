@@ -541,9 +541,70 @@
     exprOrfn();
   };
 
+  function updateProperties(vNode) {
+    var el = vNode.el;
+    var newProps = vNode.data || {}; // console.log('updateProperties', el, newProps);
+
+    for (var key in newProps) {
+      if (key == 'style') {
+        for (var styleName in newProps.style) {
+          el.style[styleName] = newProps.style[styleName];
+        }
+      } else {
+        el.setAttribute(key, newProps[key]);
+      }
+    }
+  }
+
+  function createElm(vNode) {
+    // 递归创建
+    // console.log(vNode);
+    var tag = vNode.tag,
+        children = vNode.children,
+        data = vNode.data,
+        key = vNode.key,
+        text = vNode.text;
+
+    if (typeof tag == 'string') {
+      // 元素 虚拟节点和真实节点做一个映射关系(后面diff时直接使用老元素)
+      vNode.el = document.createElement(tag); // 更新元素属性
+
+      updateProperties(vNode);
+      children.forEach(function (child) {
+        // 递归渲染子节点 将子节点渲染到父节点中
+        vNode.el.appendChild(createElm(child));
+      });
+    } else {
+      // 普通文本
+      vNode.el = document.createTextNode(text);
+    }
+
+    return vNode.el;
+  }
+
+  function patch(oldVnode, newVnode) {
+    // console.log(oldVnode, newVnode);
+    var isRealElement = oldVnode.nodeType;
+
+    if (isRealElement) {
+      // 真实元素
+      var oldEle = oldVnode;
+      var parentElm = oldVnode.parentNode;
+      var el = createElm(newVnode); // console.log('el',oldEle.nextSibling);
+
+      parentElm.insertBefore(el, oldEle);
+      parentElm.removeChild(oldEle);
+      return el; // 渲染的真实dom
+    }
+  }
+
   function lifeCycleMixin(Vue) {
     Vue.prototype._update = function (vnode) {
-      console.log('_update', vnode);
+      // console.log('_update', vnode);
+      var vm = this; // 将虚拟节点变成真实节点替换掉$el
+      // 后续dom diff也会执行该方法
+
+      vm.$el = patch(vm.$el, vnode);
     };
   }
   function mountComponent(vm, el) {
@@ -581,7 +642,7 @@
     Vue.prototype.$mount = function (el) {
       // 可能是字符串 可能是dom对象
       var vm = this;
-      el = document.querySelector(el); // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
+      el = vm.$el = document.querySelector(el); // 同时传入template 和 render, 默认采用render，抛弃template 如果都没传，默认使用id=app中的模版
 
       var opts = vm.$options;
 
