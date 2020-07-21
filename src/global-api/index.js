@@ -17,5 +17,6 @@ export function initGlobalApi(Vue) { // 全局api接收很多参数
         console.log('mixin', mixin);
         this.options = mergeOptions(this.options, mixin);
         console.log('this.options', this.options);
+
     }
 }

@@ -704,7 +704,10 @@
   function initMixin(Vue) {
     Vue.prototype._init = function (options) {
       // vue的内部 $options 就是用户传递的所有参数
-      var vm = this;
+      var vm = this; // 这个options就包含了用户创建的实例时传入的所有属性
+
+      vm.$options = mergeOptions(vm.constructor.options, options);
+      console.log(vm.$options, '---------');
       vm.$options = options; // 用户传入的参数
       // options.data props computed watch
 
