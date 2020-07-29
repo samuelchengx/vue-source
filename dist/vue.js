@@ -209,6 +209,52 @@
     };
   });
 
+  // 每个属性都有一个dep属性， dep存放着watcher
+  // 一个dep可能有多个watcher， 一个watcher可能被多个属性所依赖
+  // dep和watcher是一个多对对的关系
+  var id = 0;
+
+  var Dep = /*#__PURE__*/function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id++;
+      this.subs = [];
+    }
+
+    _createClass(Dep, [{
+      key: "depend",
+      value: function depend() {
+        // 1.让dep记住watcher
+        // 2.让watcher记住dep 双向记忆
+        Dep.target.addDep(this); // 让watcher存储dep
+      }
+    }, {
+      key: "addSub",
+      value: function addSub(watcher) {
+        this.subs.push(watcher);
+      }
+    }, {
+      key: "notify",
+      value: function notify() {
+        this.subs.forEach(function (watcher) {
+          watcher.update();
+        });
+      }
+    }]);
+
+    return Dep;
+  }();
+
+  Dep.target = null; // 默认为空
+  function pushTarget(watcher) {
+    Dep.target = watcher; // stack.push(watcher);
+  }
+  function popTarget(watcher) {
+    Dep.target = null; // stack.pop();
+    // Dep.target = stack[stack.length-1];
+  }
+
   var Observer = /*#__PURE__*/function () {
     function Observer(data) {
       _classCallCheck(this, Observer);
@@ -259,16 +305,28 @@
   function defineReactive(data, key, value) {
     // 如果传入的值还是对象的话，递归循环操作
     observe(value);
+    var dep = new Dep(); // name.dep=[watcher] age.dep=[watcher] msg.dep=[watcher]
+    // 渲染watcher中的deps [name.deps, age.dep, msg.dep]
+
     Object.defineProperty(data, key, {
       get: function get() {
+        // 取值的时候，就会给属性增加一个dep
+        // dep要和全局变量上的watcher做一个对应关系
+        if (Dep.target) {
+          dep.depend(); // dep收集watcher
+
+          console.log('dep', key, dep);
+        }
+
         return value;
       },
       set: function set(v) {
-        if (!value == v) {
-          // 赋值vm.msg = {b: 200}为对象也需要监控一下
-          observe(v);
-          value = v;
-        }
+        if (value == v) return; // 赋值vm.msg = {b: 200}为对象也需要监控一下
+
+        observe(v);
+        value = v; // 当数据更新时，自己对应的watcher需重新执行
+
+        dep.notify();
       }
     });
   }
@@ -326,15 +384,11 @@
 
     for (var key in data) {
       proxy(vm, '_data', key);
-    }
+    } // console.log('vm', vm);
+
 
     observe(data);
   }
-  /**
-   *
-   *
-   *
-   * */
 
   // 字母a-zA-Z_ - . 数组小写字母 大写字母
   var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // 标签名
@@ -614,12 +668,59 @@
     return render;
   }
 
-  var Watcher = function Watcher(vm, exprOrfn, cb, options) {
-    _classCallCheck(this, Watcher);
+  var id$1 = 0; // 目前只有一个watcher
 
-    // console.log('Watcher', vm, exprOrfn);
-    exprOrfn();
-  };
+  var Watcher = /*#__PURE__*/function () {
+    function Watcher(vm, exprOrfn, cb, options) {
+      _classCallCheck(this, Watcher);
+
+      // console.log('Watcher', vm, exprOrfn);
+      this.vm = vm;
+      this.exprOrfn = exprOrfn;
+      this.cb = cb;
+      this.options = options;
+      this.deps = []; // watcher存放所以的dep
+
+      this.depId = new Set();
+
+      if (typeof exprOrfn === 'function') {
+        this.getter = exprOrfn;
+      }
+
+      this.id = id$1++;
+      this.get();
+    }
+
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        pushTarget(this); // 在取值之前，把watcher保存起来
+
+        this.getter(); // 实现视图渲染 => 渲染取值
+
+        popTarget(); // 删除watcher
+      }
+    }, {
+      key: "addDep",
+      value: function addDep(dep) {
+        // console.log(dep.id);
+        var id = dep.id;
+
+        if (!this.depId.has(id)) {
+          this.depId.add(id);
+          this.deps.push(dep);
+          dep.addSub(this); // 让dep订阅watcher
+        }
+      }
+    }, {
+      key: "update",
+      value: function update() {
+        this.get();
+      }
+    }]);
+
+    return Watcher;
+  }();
 
   function updateProperties(vNode) {
     var el = vNode.el;
@@ -636,43 +737,40 @@
     }
   }
 
-  function createElm(vNode) {
-    // 递归创建
-    // console.log(vNode);
-    var tag = vNode.tag,
-        children = vNode.children,
-        data = vNode.data,
-        key = vNode.key,
-        text = vNode.text;
+  function createElm(vnode) {
+    // 需要递归创建
+    var tag = vnode.tag,
+        children = vnode.children,
+        data = vnode.data,
+        key = vnode.key,
+        text = vnode.text;
 
     if (typeof tag == 'string') {
-      // 元素 虚拟节点和真实节点做一个映射关系(后面diff时直接使用老元素)
-      vNode.el = document.createElement(tag); // 更新元素属性
+      // 元素 // 将虚拟节点和真实节点做一个映射关系 （后面diff时如果元素相同直接复用老元素 ）
+      vnode.el = document.createElement(tag);
+      updateProperties(vnode); // 跟新元素属性
 
-      updateProperties(vNode);
       children.forEach(function (child) {
-        // 递归渲染子节点 将子节点渲染到父节点中
-        vNode.el.appendChild(createElm(child));
+        // 递归渲染子节点 将子节点 渲染到父节点中
+        vnode.el.appendChild(createElm(child));
       });
     } else {
-      // 普通文本
-      vNode.el = document.createTextNode(text);
+      // 普通的文本
+      vnode.el = document.createTextNode(text);
     }
 
-    return vNode.el;
+    return vnode.el;
   }
-
   function patch(oldVnode, newVnode) {
-    // console.log(oldVnode, newVnode);
     var isRealElement = oldVnode.nodeType;
 
     if (isRealElement) {
       // 真实元素
       var oldEle = oldVnode;
       var parentElm = oldVnode.parentNode;
-      var el = createElm(newVnode); // console.log('el',oldEle.nextSibling);
+      var el = createElm(newVnode); // console.log('el',oldEle.nextSibling)
 
-      parentElm.insertBefore(el, oldEle);
+      parentElm.insertBefore(el, oldEle.nextSibling);
       parentElm.removeChild(oldEle);
       return el; // 渲染的真实dom
     }
@@ -802,23 +900,19 @@
       var render = vm.$options.render;
 
       Vue.prototype._v = function (text) {
-        // console.log('_v');
         return createTextVNode(text);
       };
 
       Vue.prototype._c = function () {
-        // console.log('_c');
         return createElementVNode.apply(void 0, arguments);
       };
 
       Vue.prototype._s = function (val) {
-        // console.log('_s');
         // 判断当前的值是否是对象
         return val == null ? '' : _typeof(val) ? JSON.stringify(val) : val;
       };
 
       var vnode = render.call(vm); // _c _v _s
-      // console.log('vnode', vnode);
 
       return vnode;
     };

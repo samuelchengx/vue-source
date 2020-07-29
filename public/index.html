@@ -9,40 +9,39 @@
 </head>
 <body>
 <div id="app">
-    {{name}} is {{age}} years old!
+    {{name}} is {{age}} years old! {{msg}}
 </div>
 <script src="./../dist/vue.js"></script>
 <script>
     // 多个实例，提取公共逻辑
     // Vue.mixin Vue.extend 静态方法 一般都放在Vue的构造函数上
-
-    Vue.mixin({
-        // 合并策略非常多 data computed watch props
-        // 生命周期的合并策略 面试点
-        a: {
-            a: 1
-        },
-        b: 2,
-        created () {
-            console.log('mixin 1');
-        },
-        beforeCreate() {
-            console.log('before create 1');
-        }
-    });
-
-    Vue.mixin({
-        a: {
-            b: 2
-        },
-        c: 3,
-        created () {
-            console.log('mixin 2');
-        },
-        beforeCreate() {
-            console.log('before create 2');
-        }
-    });
+    // Vue.mixin({
+    //     // 合并策略非常多 data computed watch props
+    //     // 生命周期的合并策略 面试点
+    //     a: {
+    //         a: 1
+    //     },
+    //     b: 2,
+    //     created () {
+    //         console.log('mixin 1');
+    //     },
+    //     beforeCreate() {
+    //         console.log('before create 1');
+    //     }
+    // });
+    //
+    // Vue.mixin({
+    //     a: {
+    //         b: 2
+    //     },
+    //     c: 3,
+    //     created () {
+    //         console.log('mixin 2');
+    //     },
+    //     beforeCreate() {
+    //         console.log('before create 2');
+    //     }
+    // });
 
     // Object.defineProperties()
     const vm = new Vue({
@@ -56,7 +55,8 @@
                 a: {
                     a: 100
                 },
-                arr: [1, 2, 3, 4, {T: 10}, {Z: 350}]
+                arr: [1, 2, 3, 4, {T: 10}, {Z: 350}],
+                msg: 'watcher'
             }
         },
         // js语法也可以用ast语法树来描述
@@ -79,7 +79,7 @@
         //     }
         // }
         created(){
-            console.log('created inner');
+            // console.log('created inner');
         }
     });
      // vm.data.arr.push(10);
@@ -88,8 +88,19 @@
      //vm._data.arr.splice(1, 0, {P:  0});
     //  console.log('vm--', vm.name);
     // vm.arr.splice(1, 0, {P:  0});
+    // Vue中实现了响应式系统 就是如果属性变化 视图会自动更新
+    // 依赖搜集 每个属性对应 一个重新渲染的方法 watcher
 
-
+    setTimeout(function () {
+        // 给每个属性增加一个dep 这个属性里可以包含多个watcher
+         // 记录一下当前这个msg对应的watcher
+        // console.log('vm', vm);
+        vm.msg = 'xxx1';
+        vm.msg = 'xxx2';
+        vm.msg = 'xxx3';
+        vm.msg = 'xxx4';
+        // vm._update(vm._render());
+    }, 2000);
 </script>
 </body>
 </html>

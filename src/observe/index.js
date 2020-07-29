@@ -1,6 +1,6 @@
 import { isObject } from './../util';
 import { ArrayMethods } from './array';
-
+import Dep from "./dep";
 // es6类实现
 class Observer {
     constructor(data) {
@@ -41,16 +41,26 @@ class Observer {
 function defineReactive(data, key, value) {
     // 如果传入的值还是对象的话，递归循环操作
     observe(value);
+    let dep = new Dep();
+    // name.dep=[watcher] age.dep=[watcher] msg.dep=[watcher]
+    // 渲染watcher中的deps [name.deps, age.dep, msg.dep]
     Object.defineProperty(data, key,{
         get() {
+            // 取值的时候，就会给属性增加一个dep
+            // dep要和全局变量上的watcher做一个对应关系
+            if(Dep.target) {
+                dep.depend(); // dep收集watcher
+                console.log('dep', key, dep);
+            }
             return value;
         },
         set(v) {
-            if(!value == v) {
-                // 赋值vm.msg = {b: 200}为对象也需要监控一下
-                observe(v);
-                value = v;
-            }
+            if(value == v) return;
+            // 赋值vm.msg = {b: 200}为对象也需要监控一下
+            observe(v);
+            value = v;
+            // 当数据更新时，自己对应的watcher需重新执行
+            dep.notify();
         }
     });
 }

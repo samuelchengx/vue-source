@@ -16,12 +16,8 @@ export function initState(vm) {
     // computed watch ...
 }
 
-function initProps() {
-
-}
-function initMethod() {
-
-}
+function initProps() {}
+function initMethod() {}
 
 function proxy(target, property, key) {
     Object.defineProperty(target, key, {
@@ -45,11 +41,6 @@ function initData(vm) {
     for(let key in  data) {
         proxy(vm, '_data', key);
     }
+    // console.log('vm', vm);
     observe(data);
 }
-
-/**
- *
- *
- *
- * */
