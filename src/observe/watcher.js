@@ -2,18 +2,19 @@ import {
     pushTarget,
     popTarget
 } from './dep';
+
+import { queueWatcher } from './scheduler';
 // watcher id
 let id = 0;
 // 目前只有一个watcher
 
 class Watcher {
     constructor(vm, exprOrfn, cb, options) {
-        // console.log('Watcher', vm, exprOrfn);
         this.vm = vm;
         this.exprOrfn = exprOrfn;
         this.cb = cb;
         this.options = options;
-        this.deps = []; // watcher存放所以的dep
+        this.deps = []; // watcher存放所有的dep
         this.depId = new Set();
         if(typeof exprOrfn === 'function'){
             this.getter = exprOrfn;
@@ -35,7 +36,12 @@ class Watcher {
             dep.addSub(this); // 让dep订阅watcher
         }
     }
-    update(){
+    update() { //更新原理
+        queueWatcher(this); // 将watcher存储起来
+        // console.log('-----id-----', this.id);
+        // this.get(); // 以前调用get方法是直接更新视图
+    }
+    run() {
         this.get();
     }
 }

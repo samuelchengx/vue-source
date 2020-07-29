@@ -2,6 +2,7 @@ import { initMixin } from './init';
 import { renderMixin } from './render';
 import { lifeCycleMixin } from './lifeCycle';
 import { initGlobalApi } from './global-api/index';
+import {nextTick} from "./observe/scheduler";
 function Vue(options) {
     // 内部初始化操作
     // console.log(options);
@@ -15,5 +16,7 @@ lifeCycleMixin(Vue);
 // 组件初始化
 // initGlobalApi 给构造函数扩展全局方法
 initGlobalApi(Vue);
+
+Vue.prototype.$nextTick = nextTick;
 
 export default Vue;

@@ -99,6 +99,10 @@
         vm.msg = 'xxx2';
         vm.msg = 'xxx3';
         vm.msg = 'xxx4';
+        // Vue异步更新策略
+        vm.$nextTick(()=>{
+            console.log(app.innerHTML);
+        });
         // vm._update(vm._render());
     }, 2000);
 </script>

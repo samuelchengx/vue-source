@@ -50,7 +50,7 @@ function defineReactive(data, key, value) {
             // dep要和全局变量上的watcher做一个对应关系
             if(Dep.target) {
                 dep.depend(); // dep收集watcher
-                console.log('dep', key, dep);
+                // console.log('dep', key, dep);
             }
             return value;
         },

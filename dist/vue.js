@@ -227,7 +227,7 @@
       value: function depend() {
         // 1.让dep记住watcher
         // 2.让watcher记住dep 双向记忆
-        Dep.target.addDep(this); // 让watcher存储dep
+        Dep.target.addDep(this); // 让dep存储watcher
       }
     }, {
       key: "addSub",
@@ -314,8 +314,7 @@
         // dep要和全局变量上的watcher做一个对应关系
         if (Dep.target) {
           dep.depend(); // dep收集watcher
-
-          console.log('dep', key, dep);
+          // console.log('dep', key, dep);
         }
 
         return value;
@@ -668,18 +667,71 @@
     return render;
   }
 
+  var has = {}; // vue源码里有的时候去重用set，有的时候用对象去重
+
+  var queue = []; // 队列是否正在等待更新
+
+  function flushSchedulerQueue() {
+    for (var i = 0; i < queue.length; i++) {
+      var watcher = queue[i];
+      watcher.run();
+    }
+
+    queue = [];
+    has = {};
+  } // [flushSchedulerQueue, fn]
+
+
+  function queueWatcher(watcher) {
+    var id = watcher.id;
+
+    if (has[id] == null) {
+      has[id] = true; // 如果没有注册过，就注册该watcher
+
+      queue.push(watcher); // if(!pending){
+      //setTimeout(()=>{
+      // flushSchedulerQueue();
+      // pending = true; // 正在刷新中
+      // }, 0);
+      // }
+      // setTimeout(flushSchedulerQueue ,0);
+
+      nextTick(flushSchedulerQueue); // flushSchedulerQueue调用渲染watcher
+    }
+  }
+  var callbacks = []; // 先调用flushSchedulerQueue，再调用用户注册的函数
+
+  var lock = false;
+
+  function flushCallbackQueue() {
+    callbacks.forEach(function (fn) {
+      return fn();
+    });
+    lock = false;
+  }
+
+  function nextTick(fn) {
+    callbacks.push(fn);
+
+    if (!lock) {
+      setTimeout(function () {
+        flushCallbackQueue();
+      }, 0);
+      lock = true;
+    }
+  }
+
   var id$1 = 0; // 目前只有一个watcher
 
   var Watcher = /*#__PURE__*/function () {
     function Watcher(vm, exprOrfn, cb, options) {
       _classCallCheck(this, Watcher);
 
-      // console.log('Watcher', vm, exprOrfn);
       this.vm = vm;
       this.exprOrfn = exprOrfn;
       this.cb = cb;
       this.options = options;
-      this.deps = []; // watcher存放所以的dep
+      this.deps = []; // watcher存放所有的dep
 
       this.depId = new Set();
 
@@ -715,6 +767,14 @@
     }, {
       key: "update",
       value: function update() {
+        //更新原理
+        queueWatcher(this); // 将watcher存储起来
+        // console.log('-----id-----', this.id);
+        // this.get(); // 以前调用get方法是直接更新视图
+      }
+    }, {
+      key: "run",
+      value: function run() {
         this.get();
       }
     }]);
@@ -796,6 +856,8 @@
       // 内部调用解析后的render方法 => 虚拟node
       // _render => options.render 方法
       // _update => 将虚拟dom变成真实dom
+      console.log('-------------');
+
       vm._update(vm._render());
     }; // 每次数据变化就执行updateComponent 进行更新操作
 
@@ -945,6 +1007,7 @@
   // initGlobalApi 给构造函数扩展全局方法
 
   initGlobalApi(Vue);
+  Vue.prototype.$nextTick = nextTick;
 
   return Vue;
 
