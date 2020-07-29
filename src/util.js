@@ -10,9 +10,11 @@ const LIFECYCLE_HOOKS = [
     'beforeUpdate',
     'updated'
 ];
-let strategys = [];
+let strategys = {};
 
 function mergeHook(parent, child) {
+    // console.log('parent, child', parent, child);
+    // debugger;
     if(child) {
         if (parent) {
             return parent.concat(child);
@@ -41,7 +43,7 @@ LIFECYCLE_HOOKS.forEach( hook => {
 // }
 
 export function mergeOptions(parent, child) {
-    console.log(parent, child);
+    // console.log(parent, child);
     const options = {};
     // 如果父亲和儿子里都有一个属性 这个属性不冲突
     for(let key in parent) { // 处理父亲的所有属性

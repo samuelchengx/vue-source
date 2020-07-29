@@ -1,7 +1,7 @@
 import { initMixin } from './init';
 import { renderMixin } from './render';
 import { lifeCycleMixin } from './lifeCycle';
-import { initGlobalApi } from './global-api/index'
+import { initGlobalApi } from './global-api/index';
 function Vue(options) {
     // 内部初始化操作
     // console.log(options);

@@ -103,9 +103,11 @@
     return _typeof(data) === 'object' && data !== null;
   }
   var LIFECYCLE_HOOKS = ['beforeCreate', 'created', 'mounted', 'beforeUpdate', 'updated'];
-  var strategys = [];
+  var strategys = {};
 
   function mergeHook(parent, child) {
+    // console.log('parent, child', parent, child);
+    // debugger;
     if (child) {
       if (parent) {
         return parent.concat(child);
@@ -132,7 +134,7 @@
   // }
 
   function mergeOptions(parent, child) {
-    console.log(parent, child);
+    // console.log(parent, child);
     var options = {}; // 如果父亲和儿子里都有一个属性 这个属性不冲突
 
     for (var key in parent) {
@@ -701,8 +703,9 @@
 
 
     new Watcher(vm, updateComponent, function () {}, true); // vue响应式数据规则 数据变化，视图刷新
+    // debugger;
 
-    callHook(vm, 'created');
+    callHook(vm, 'mounted');
   }
   function callHook(vm, hook) {
     var handles = vm.$options[hook];
@@ -718,9 +721,9 @@
     Vue.prototype._init = function (options) {
       // vue的内部 $options 就是用户传递的所有参数
       var vm = this; // 这个options就包含了用户创建的实例时传入的所有属性
+      // console.log('--vm--', vm.constructor.options);
 
-      vm.$options = mergeOptions(vm.constructor.options, options);
-      vm.$options = options; // 用户传入的参数
+      vm.$options = mergeOptions(vm.constructor.options, options); // vm.$options = options; // 用户传入的参数
       // options.data props computed watch
 
       callHook(vm, 'beforeCreate');
@@ -828,9 +831,8 @@
     // 提取公共的方法的逻辑，混合到每个每个实例中
 
     Vue.mixin = function (mixin) {
-      console.log('mixin', mixin);
-      this.options = mergeOptions(this.options, mixin);
-      console.log('this.options', this.options);
+      // console.log('this.options, mixin', this.options, mixin);
+      this.options = mergeOptions(this.options, mixin); // console.log('Vue', Vue.options);
     };
   }
 

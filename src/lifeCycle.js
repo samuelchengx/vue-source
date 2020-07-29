@@ -25,13 +25,14 @@ export function mountComponent(vm, el) {
     // 每次数据变化就执行updateComponent 进行更新操作
     new Watcher(vm, updateComponent, ()=>{}, true);
     // vue响应式数据规则 数据变化，视图刷新
-    callHook(vm, 'created');
+    // debugger;
+    callHook(vm, 'mounted');
 }
 
 export function callHook(vm, hook) {
     let handles = vm.$options[hook];
-    if(handles){
-        for (let i = 0; i < handles.length; i++) {
+    if(handles) {
+        for (let i=0; i<handles.length; i++) {
             handles[i].call(vm); // 所有的生命周期的this 指向的都是当前的实例
         }
     }
