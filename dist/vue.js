@@ -833,6 +833,16 @@
       parentElm.insertBefore(el, oldEle.nextSibling);
       parentElm.removeChild(oldEle);
       return el; // 渲染的真实dom
+    } else {
+      // dom diff算法  特点: 同层比较 O(n^3) O(n)
+      // 不需要跨级比较
+      // 两棵树要先比较树根一不一样，再去比子节点
+      console.log('patch diff');
+
+      if (oldVnode.tag !== newVnode.tag) {
+        // 标签名不一致,两个不一样的节点
+        oldVnode.el.parentNode.replaceChild(createElm(newVnode), oldVnode.el);
+      }
     }
   }
 
@@ -856,8 +866,7 @@
       // 内部调用解析后的render方法 => 虚拟node
       // _render => options.render 方法
       // _update => 将虚拟dom变成真实dom
-      console.log('-------------');
-
+      // console.log('-------------');
       vm._update(vm._render());
     }; // 每次数据变化就执行updateComponent 进行更新操作
 
@@ -955,24 +964,33 @@
   }
 
   function renderMixin(Vue) {
+    Vue.prototype._v = function (text) {
+      return createTextVNode(text);
+    };
+
+    Vue.prototype._c = function () {
+      return createElementVNode.apply(void 0, arguments);
+    };
+
+    Vue.prototype._s = function (val) {
+      // 判断当前的值是否是对象
+      return val == null ? '' : _typeof(val) ? JSON.stringify(val) : val;
+    };
+
     Vue.prototype._render = function () {
       // 调用vm自身的render方法
       // console.log('_render');
       var vm = this;
-      var render = vm.$options.render;
-
-      Vue.prototype._v = function (text) {
-        return createTextVNode(text);
-      };
-
-      Vue.prototype._c = function () {
-        return createElementVNode.apply(void 0, arguments);
-      };
-
-      Vue.prototype._s = function (val) {
-        // 判断当前的值是否是对象
-        return val == null ? '' : _typeof(val) ? JSON.stringify(val) : val;
-      };
+      var render = vm.$options.render; // Vue.prototype._v = function(text){
+      //     return createTextVNode(text);
+      // }
+      // Vue.prototype._c = function(){
+      //     return createElementVNode(...arguments);
+      // }
+      // Vue.prototype._s = function(val){
+      //     // 判断当前的值是否是对象
+      //     return val == null ? '' : (typeof val ? JSON.stringify(val) : val);
+      // }
 
       var vnode = render.call(vm); // _c _v _s
 
@@ -1007,7 +1025,33 @@
   // initGlobalApi 给构造函数扩展全局方法
 
   initGlobalApi(Vue);
-  Vue.prototype.$nextTick = nextTick;
+  Vue.prototype.$nextTick = nextTick; // ---------------------diff---------------------
+  var vm1 = new Vue({
+    data: function data() {
+      return {
+        name: 'samuelcheng'
+      };
+    }
+  });
+  var vm2 = new Vue({
+    data: function data() {
+      return {
+        name: 'gina'
+      };
+    }
+  });
+  var render1 = compileToFunctions("<div>{{name}}</div>");
+  var oldVnode = render1.call(vm1); // let dom2 = render.call(vm2);
+
+  var realElement = createElm(oldVnode);
+  document.body.appendChild(realElement);
+  var render2 = compileToFunctions("<p>{{name}}</p>");
+  var newVnode = render2.call(vm2); // console.log('newVnode', newVnode);
+  // 没有虚拟dom时和diff算法时，直接重新渲染，强制更新,没有复用老的dom
+  // diff 比对差异，再更新
+  // patch(realElement, newVnode);
+
+  patch(oldVnode, newVnode); // 老的节点和新的节点比对
 
   return Vue;
 

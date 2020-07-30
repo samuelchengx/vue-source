@@ -27,7 +27,7 @@ export function createElm(vnode) { // 需要递归创建
         // 普通的文本
         vnode.el = document.createTextNode(text);
     }
-    return vnode.el
+    return vnode.el;
 }
 
 export function patch(oldVnode, newVnode) {
@@ -42,7 +42,13 @@ export function patch(oldVnode, newVnode) {
         parentElm.removeChild(oldEle);
         return el; // 渲染的真实dom
     } else {
-        // dom diff算法
+        // dom diff算法  特点: 同层比较 O(n^3) O(n)
+        // 不需要跨级比较
+        // 两棵树要先比较树根一不一样，再去比子节点
+        console.log('patch diff');
+        if(oldVnode.tag !== newVnode.tag) { // 标签名不一致,两个不一样的节点
+            oldVnode.el.parentNode.replaceChild(createElm(newVnode), oldVnode.el);
+        }
 
     }
 }

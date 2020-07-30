@@ -90,7 +90,6 @@
     // vm.arr.splice(1, 0, {P:  0});
     // Vue中实现了响应式系统 就是如果属性变化 视图会自动更新
     // 依赖搜集 每个属性对应 一个重新渲染的方法 watcher
-
     setTimeout(function () {
         // 给每个属性增加一个dep 这个属性里可以包含多个watcher
          // 记录一下当前这个msg对应的watcher
@@ -101,7 +100,7 @@
         vm.msg = 'xxx4';
         // Vue异步更新策略
         vm.$nextTick(()=>{
-            console.log(app.innerHTML);
+            // console.log(app.innerHTML);
         });
         // vm._update(vm._render());
     }, 2000);

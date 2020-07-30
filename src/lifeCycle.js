@@ -20,7 +20,7 @@ export function mountComponent(vm, el) {
         // 内部调用解析后的render方法 => 虚拟node
         // _render => options.render 方法
         // _update => 将虚拟dom变成真实dom
-        console.log('-------------');
+        // console.log('-------------');
         vm._update(vm._render());
     };
     // 每次数据变化就执行updateComponent 进行更新操作
