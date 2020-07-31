@@ -783,16 +783,34 @@
   }();
 
   function updateProperties(vNode) {
+    var oldProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    // 需要比较 vNode.data 和 oldProps的差异
     var el = vNode.el;
-    var newProps = vNode.data || {}; // console.log('updateProperties', el, newProps);
+    var newProps = vNode.data || {}; // 获取老的样式和新的样式差异，如果新的属性丢失 应该删除老的元素上的属性
 
-    for (var key in newProps) {
-      if (key == 'style') {
+    var newStyle = newProps.style || {};
+    var oldStyle = oldProps.style || {}; // console.log('updateProperties', el, newProps);
+
+    for (var key in oldStyle) {
+      if (!newStyle[key]) {
+        el.style[key] = ''; // 删除老的样式
+      }
+    }
+
+    for (var _key in oldProps) {
+      if (!newProps[_key]) {
+        el.removeAttribute(_key); // 删除元素老的属性
+      }
+    } //其它情况直接覆盖
+
+
+    for (var _key2 in newProps) {
+      if (_key2 == 'style') {
         for (var styleName in newProps.style) {
           el.style[styleName] = newProps.style[styleName];
         }
       } else {
-        el.setAttribute(key, newProps[key]);
+        el.setAttribute(_key2, newProps[_key2]);
       }
     }
   }
@@ -837,12 +855,28 @@
       // dom diff算法  特点: 同层比较 O(n^3) O(n)
       // 不需要跨级比较
       // 两棵树要先比较树根一不一样，再去比子节点
-      console.log('patch diff');
-
+      // console.log('patch diff');
       if (oldVnode.tag !== newVnode.tag) {
         // 标签名不一致,两个不一样的节点
         oldVnode.el.parentNode.replaceChild(createElm(newVnode), oldVnode.el);
-      }
+      } // 标签一致 div， 都是文本 tag: undefined
+
+
+      if (!oldVnode.tag) {
+        // 如果是文本 文本变化 直接用新文本替换掉老文本
+        if (oldVnode.text !== newVnode.text) {
+          oldVnode.text = newVnode.text;
+        }
+      } // 一定是标签 标签名一致
+      // 需要复用老的节点，替换掉老的属性
+
+
+      var _el = newVnode.el = oldVnode.el; // 更新属性 diff属性
+
+
+      updateProperties(newVnode, oldVnode.data); // 属性更新完毕，当前树根更新完毕
+
+      return _el;
     }
   }
 
@@ -1040,18 +1074,20 @@
       };
     }
   });
-  var render1 = compileToFunctions("<div>{{name}}</div>");
+  var render1 = compileToFunctions("<div id=\"a\" c=\"a\" style=\"background: red;color: blue;\">{{name}}</div>");
   var oldVnode = render1.call(vm1); // let dom2 = render.call(vm2);
 
   var realElement = createElm(oldVnode);
   document.body.appendChild(realElement);
-  var render2 = compileToFunctions("<p>{{name}}</p>");
+  var render2 = compileToFunctions("<div id=\"b\" style=\"background: green;\">{{name}}</div>");
   var newVnode = render2.call(vm2); // console.log('newVnode', newVnode);
   // 没有虚拟dom时和diff算法时，直接重新渲染，强制更新,没有复用老的dom
   // diff 比对差异，再更新
   // patch(realElement, newVnode);
 
-  patch(oldVnode, newVnode); // 老的节点和新的节点比对
+  setTimeout(function () {
+    patch(oldVnode, newVnode); // 老的节点和新的节点比对
+  }, 1000);
 
   return Vue;
 

@@ -40,19 +40,21 @@ let vm2 = new Vue({
     }
 });
 
-let render1 = compileToFunctions(`<div>{{name}}</div>`);
+let render1 = compileToFunctions(`<div id="a" c="a" style="background: red;color: blue;">{{name}}</div>`);
 let oldVnode = render1.call(vm1);
 // let dom2 = render.call(vm2);
 let realElement = createElm(oldVnode);
 document.body.appendChild(realElement);
 
-let render2 = compileToFunctions(`<p>{{name}}</p>`);
+let render2 = compileToFunctions(`<div id="b" style="background: green;">{{name}}</div>`);
 let newVnode = render2.call(vm2);
 // console.log('newVnode', newVnode);
 // 没有虚拟dom时和diff算法时，直接重新渲染，强制更新,没有复用老的dom
 // diff 比对差异，再更新
 // patch(realElement, newVnode);
-patch(oldVnode, newVnode); // 老的节点和新的节点比对
+setTimeout(() => {
+    patch(oldVnode, newVnode); // 老的节点和新的节点比对
+}, 1000);
 
 
 export default Vue;
