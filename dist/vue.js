@@ -865,7 +865,7 @@
       if (!oldVnode.tag) {
         // 如果是文本 文本变化 直接用新文本替换掉老文本
         if (oldVnode.text !== newVnode.text) {
-          oldVnode.text = newVnode.text;
+          oldVnode.el.textContent = newVnode.text;
         }
       } // 一定是标签 标签名一致
       // 需要复用老的节点，替换掉老的属性
@@ -875,8 +875,127 @@
 
 
       updateProperties(newVnode, oldVnode.data); // 属性更新完毕，当前树根更新完毕
+      // 比对子节点
+
+      var oldChildren = oldVnode.children || []; // 老的孩子
+
+      var newChildren = newVnode.children || []; // 新的孩子
+      // 新老都有才能diff
+      // 老的有孩子 新的没孩子 直接删除
+      // 新的有孩子 老的没孩子 直接插入
+
+      if (oldChildren.length > 0 && newChildren.length > 0) {
+        // diff 两者都有孩子 不断比较孩子节点
+        updateChildren(_el, oldChildren, newChildren); // 通过比较老孩子和新孩子，操作el的孩子
+      } else if (oldChildren.length > 0) {
+        _el.innerHTML = '';
+      } else if (newChildren.length > 0) {
+        for (var i = 0; i < newChildren.length; i++) {
+          var child = newChildren[i]; // 拿到单个孩子
+
+          _el.append(createElm(child)); // 浏览器自己优化
+
+        }
+      }
 
       return _el;
+    }
+  }
+
+  function isSameVnode(oldVnode, newVnode) {
+    return oldVnode.key == newVnode.key && oldVnode.tag == newVnode.tag;
+  }
+
+  function updateChildren(parent, oldChildren, newChildren) {
+    // vue2.0使用双指针方式进行比对
+    // v-for要有key key可以标示元素是否发生变化 前后key相同，可以复用该元素
+    var oldStartIndex = 0; // 老的节点索引
+
+    var oldStartVnode = oldChildren[0]; // 老的开始
+
+    var oldEndIndex = oldChildren.length - 1; // 老的尾部索引
+
+    var oldEndVnode = oldChildren[oldEndIndex]; // 获取老的子节点最后一个
+
+    var newStartIndex = 0; // 新的节点索引
+
+    var newStartVnode = newChildren[0]; // 新的开始
+
+    var newEndIndex = newChildren.length - 1; // 新的尾部索引
+
+    var newEndVnode = newChildren[newEndIndex]; // 获取新的子节点最后一个
+
+    function makeIndexByKey(children) {
+      var map = {};
+      children.forEach(function (item, index) {
+        map[item.key] = index;
+      });
+      return map;
+    } // 1.方案1 先开始从头部开始比较 O(n) 优化向后插入的逻辑
+
+
+    while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
+      if (!oldStartVnode) {
+        oldStartVnode = oldChildren[++oldStartIndex];
+      } else if (!oldEndVnode) {
+        oldEndVnode = oldChildren[--oldEndIndex];
+      } // 判断两个虚拟节点是否一致 用key+type
+
+
+      if (isSameVnode(oldStartVnode, newStartVnode)) {
+        // 标签和key一致，但属性不一致
+        patch(oldStartVnode, newStartVnode); //属性 + 递归比较
+
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newStartVnode = newChildren[++newStartIndex]; // 指针++
+      } else if (isSameVnode(oldEndVnode, newEndVnode)) {
+        // 2.方案2从尾部开始比较 头部不一致，尾部比较，优化向前插入
+        patch(oldEndVnode, newEndVnode);
+        oldEndVnode = oldChildren[--oldEndIndex]; // 移动尾部指针
+
+        newEndVnode = newChildren[--newEndIndex]; //
+      } else if (isSameVnode(oldStartVnode, newEndVnode)) {
+        // 正序 倒序 reverse sort
+        // 3.方案3 头不一样 尾不一样 头移尾 倒序操作
+        patch(oldStartVnode, newEndVnode);
+        parent.insertBefore(oldStartVnode.el, oldEndVnode.el.nextSibling); // 具备移动性
+
+        oldStartVnode = oldChildren[++oldStartIndex];
+        newEndVnode = newChildren[--newEndIndex];
+      } else if (isSameVnode(oldEndVnode, newStartVnode)) {
+        patch(oldEndVnode, newStartVnode);
+        parent.insertBefore(oldEndVnode.el, oldStartVnode.el);
+        oldEndVnode = oldChildren[--oldEndIndex];
+        newStartVnode = newChildren[++newStartIndex];
+      } else {
+        // 交叉比对
+        var map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
+
+        var moveIndex = map[newStartVnode.key];
+
+        if (moveIndex == undefined) {
+          // 新元素 添加进去
+          parent.insertBefore(createElm(newStartVnode), oldStartVnode.el);
+        } else {
+          var moveVnode = oldChildren[moveIndex];
+          oldChildren[moveIndex] = null; // 占位，直接删除导致数组塌陷
+          // 比对当前的元素的属性和孩子
+
+          patch(moveVnode, oldStartVnode);
+          parent.insertBefore(moveVnode.el, oldStartVnode.el);
+        }
+
+        newStartVnode = newChildren[++newStartIndex]; // 移动新的指针
+      }
+    }
+
+    if (newStartIndex <= newEndIndex) {
+      for (var i = newStartIndex; i <= newEndIndex; i++) {
+        // appendChild insertBefore
+        var ele = newChildren[newEndIndex + 1] == null ? null : newChildren[newEndIndex + 1].el; // parent.appendChild(createElm(newChildren[i]));
+
+        parent.insertBefore(createElm(newChildren[i]), ele);
+      }
     }
   }
 
@@ -1073,13 +1192,15 @@
         name: 'gina'
       };
     }
-  });
-  var render1 = compileToFunctions("<div id=\"a\" c=\"a\" style=\"background: red;color: blue;\">{{name}}</div>");
+  }); // let render1 = compileToFunctions(`<div id="a" c="a" style="background: red;color: blue;">{{name}}</div>`);
+
+  var render1 = compileToFunctions("<div>\n    <li key=\"A\">A</li>\n    <li key=\"B\">B</li>\n    <li key=\"C\">C</li>\n    <li key=\"D\">D</li>\n</div>");
   var oldVnode = render1.call(vm1); // let dom2 = render.call(vm2);
 
   var realElement = createElm(oldVnode);
-  document.body.appendChild(realElement);
-  var render2 = compileToFunctions("<div id=\"b\" style=\"background: green;\">{{name}}</div>");
+  document.body.appendChild(realElement); // let render2 = compileToFunctions(`<div id="b" style="background: green;">{{name}}</div>`);
+
+  var render2 = compileToFunctions("<div>\n    <li key=\"D\">D</li>\n    <li key=\"A\">A</li>\n    <li key=\"B\">B</li>\n    <li key=\"C\">C</li>\n</div>");
   var newVnode = render2.call(vm2); // console.log('newVnode', newVnode);
   // 没有虚拟dom时和diff算法时，直接重新渲染，强制更新,没有复用老的dom
   // diff 比对差异，再更新
