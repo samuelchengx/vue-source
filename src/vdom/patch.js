@@ -27,7 +27,6 @@ function updateProperties(vNode, oldProps={}) {
         }
     }
 }
-
 export function createElm(vnode) { // 需要递归创建
     let { tag, children, data, key, text } = vnode;
     if (typeof tag == 'string') {
@@ -107,28 +106,25 @@ function updateChildren (parent, oldChildren, newChildren) {
     let oldStartVnode = oldChildren[0]; // 老的开始
     let oldEndIndex = oldChildren.length-1; // 老的尾部索引
     let oldEndVnode = oldChildren[oldEndIndex]; // 获取老的子节点最后一个
-
     let newStartIndex = 0; // 新的节点索引
     let newStartVnode = newChildren[0]; // 新的开始
     let newEndIndex = newChildren.length-1; // 新的尾部索引
     let newEndVnode = newChildren[newEndIndex]; // 获取新的子节点最后一个
-    
     function makeIndexByKey(children) {
         let map = {};
-        children.forEach( (item, index) => {
+        children.forEach((item, index) => {
             map[item.key] = index;
         });
         return map;
     }
+    let map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
     // 1.方案1 先开始从头部开始比较 O(n) 优化向后插入的逻辑
     while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
         if(!oldStartVnode) {
             oldStartVnode = oldChildren[++oldStartIndex];
         } else if(!oldEndVnode) {
             oldEndVnode = oldChildren[--oldEndIndex];
-        }
-        // 判断两个虚拟节点是否一致 用key+type
-        if(isSameVnode(oldStartVnode, newStartVnode)){
+        }else if(isSameVnode(oldStartVnode, newStartVnode)){ // 判断两个虚拟节点是否一致 用key+type
             // 标签和key一致，但属性不一致
             patch(oldStartVnode, newStartVnode); //属性 + 递归比较
             oldStartVnode = oldChildren[++oldStartIndex];
@@ -152,7 +148,7 @@ function updateChildren (parent, oldChildren, newChildren) {
             newStartVnode = newChildren[++newStartIndex];
         } else {
             // 交叉比对
-            let map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
+            // let map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
             let moveIndex = map[newStartVnode.key];
             if(moveIndex == undefined) { // 新元素 添加进去
                 parent.insertBefore(createElm(newStartVnode) ,oldStartVnode.el);
@@ -174,9 +170,14 @@ function updateChildren (parent, oldChildren, newChildren) {
             parent.insertBefore(createElm(newChildren[i]), ele);
         }
     }
-    if(oldStartIndex <= oldEndIndex){ //说明新的循环完毕
+    if(oldStartIndex <= oldEndIndex) { //说明新的循环完毕
         for (let i = oldStartIndex; i <= oldEndIndex; i++) {
-            
+            let child = oldChildren[i];
+            if(child!=null){
+                parent.removeChild(child.el);
+            }
         }
     }
+    // 没有key就直接比较类型，如果类型一样就复用（问题：子节点可能需要重新创建）
+    // 循环时作为唯一值为key，比如reverse，采用index作为key，会重新创建元素
 }

@@ -931,18 +931,18 @@
         map[item.key] = index;
       });
       return map;
-    } // 1.方案1 先开始从头部开始比较 O(n) 优化向后插入的逻辑
+    }
 
+    var map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
+    // 1.方案1 先开始从头部开始比较 O(n) 优化向后插入的逻辑
 
     while (oldStartIndex <= oldEndIndex && newStartIndex <= newEndIndex) {
       if (!oldStartVnode) {
         oldStartVnode = oldChildren[++oldStartIndex];
       } else if (!oldEndVnode) {
         oldEndVnode = oldChildren[--oldEndIndex];
-      } // 判断两个虚拟节点是否一致 用key+type
-
-
-      if (isSameVnode(oldStartVnode, newStartVnode)) {
+      } else if (isSameVnode(oldStartVnode, newStartVnode)) {
+        // 判断两个虚拟节点是否一致 用key+type
         // 标签和key一致，但属性不一致
         patch(oldStartVnode, newStartVnode); //属性 + 递归比较
 
@@ -969,8 +969,7 @@
         newStartVnode = newChildren[++newStartIndex];
       } else {
         // 交叉比对
-        var map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
-
+        // let map = makeIndexByKey(oldChildren); // 根据老的孩子的key创建映射表
         var moveIndex = map[newStartVnode.key];
 
         if (moveIndex == undefined) {
@@ -997,6 +996,19 @@
         parent.insertBefore(createElm(newChildren[i]), ele);
       }
     }
+
+    if (oldStartIndex <= oldEndIndex) {
+      //说明新的循环完毕
+      for (var _i = oldStartIndex; _i <= oldEndIndex; _i++) {
+        var child = oldChildren[_i];
+
+        if (child != null) {
+          parent.removeChild(child.el);
+        }
+      }
+    } // 没有key就直接比较类型，如果类型一样就复用（问题：子节点可能需要重新创建）
+    // 循环时作为唯一值为key，比如reverse，采用index作为key，会重新创建元素
+
   }
 
   function lifeCycleMixin(Vue) {
@@ -1200,7 +1212,7 @@
   var realElement = createElm(oldVnode);
   document.body.appendChild(realElement); // let render2 = compileToFunctions(`<div id="b" style="background: green;">{{name}}</div>`);
 
-  var render2 = compileToFunctions("<div>\n    <li key=\"D\">D</li>\n    <li key=\"A\">A</li>\n    <li key=\"B\">B</li>\n    <li key=\"C\">C</li>\n</div>");
+  var render2 = compileToFunctions("<div>\n    <li key=\"C\">C</li>\n    <li key=\"D\">D</li>\n    <li key=\"M\">M</li>\n    <li key=\"E\">E</li>\n</div>");
   var newVnode = render2.call(vm2); // console.log('newVnode', newVnode);
   // 没有虚拟dom时和diff算法时，直接重新渲染，强制更新,没有复用老的dom
   // diff 比对差异，再更新
