@@ -356,7 +356,11 @@
 
     if (opts.data) {
       initData(vm);
-    } // computed watch ...
+    }
+
+    if (opts.watch) ;
+
+    if (opts.computed) ; // computed watch ...
 
   }
 

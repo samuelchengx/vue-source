@@ -2,7 +2,7 @@ import {initState} from './state'
 import { compileToFunctions } from './compile/index'
 import { mountComponent, callHook } from './lifeCycle';
 import { mergeOptions } from './util';
-import {nextTick} from "./observe/scheduler";
+
 export function initMixin(Vue) {
     Vue.prototype._init = function (options) {
         // vue的内部 $options 就是用户传递的所有参数

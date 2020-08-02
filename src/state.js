@@ -13,11 +13,18 @@ export function initState(vm) {
     if(opts.data) {
         initData(vm);
     }
+    if(opts.watch){
+        initWatch();
+    }
+    if(opts.computed){
+        initComputed();
+    }
     // computed watch ...
 }
-
 function initProps() {}
 function initMethod() {}
+function initWatch() {}
+function initComputed() {}
 
 function proxy(target, property, key) {
     Object.defineProperty(target, key, {

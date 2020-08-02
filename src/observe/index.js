@@ -1,6 +1,7 @@
 import { isObject } from './../util';
 import { ArrayMethods } from './array';
 import Dep from "./dep";
+
 // es6类实现
 class Observer {
     constructor(data) {
@@ -35,7 +36,6 @@ class Observer {
         });
     }
 }
-
 // vue2的性能 递归重写get set  vue3使用proxy优化性能问题
 // 定义响应式的数据变化
 function defineReactive(data, key, value) {
